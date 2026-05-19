@@ -1,0 +1,47 @@
+name: .NET Core
+
+on:
+  push:
+    branches: [ master ]
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    env:
+      NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+
+    steps:
+    - uses: actions/checkout@v6
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: 10.0.x
+
+    - name: Install dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+    - name: Test
+      run: dotnet test --no-restore --logger "trx;LogFileName=tests.trx"
+    - name: Test Report
+      uses: dorny/test-reporter@v3
+      if: success() || failure()
+      with:
+        name: tests
+        path: '**/*.trx'
+        reporter: dotnet-trx
+    - name: Pack library project
+      run: dotnet pack src/Kalshi.Client.Websocket/Kalshi.Client.Websocket.csproj --no-build --configuration Release --include-symbols -p:SymbolPackageFormat=snupkg -o .
+    - name: Publish library (NuGet)
+      if: env.NUGET_API_KEY != ''
+      run: dotnet nuget push *.nupkg --api-key "$NUGET_API_KEY" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
+    - name: Publish skipped (NuGet)
+      if: env.NUGET_API_KEY == ''
+      run: echo "NUGET_API_KEY repository secret is not configured; skipping NuGet publish."
+    #- name: Publish library (Github)
+    #  run: dotnet nuget push *.nupkg --api-key ${{secrets.PUBLISH_TO_GITHUB_TOKEN}} --source "https://nuget.pkg.github.com/marfusios/index.json" --skip-duplicate

@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>netstandard2.0;netstandard2.1;net6.0;net7.0;net8.0;net9.0;net10.0</TargetFrameworks>
+		<PackageId>Kalshi.Client.Websocket</PackageId>
+		<Authors>Mariusz Kotas</Authors>
+		<Description>Client for Kalshi websocket API v2</Description>
+		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+		<PackageReleaseNotes>Initial Kalshi websocket client with authenticated connection headers, typed subscription requests, typed market/private streams, file replay, examples, and tests.</PackageReleaseNotes>
+		<Copyright>Copyright 2026 Mariusz Kotas. All rights reserved.</Copyright>
+		<PackageTags>Kalshi websockets websocket client prediction markets orderbook ticker trades fills</PackageTags>
+		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+		<PackageProjectUrl>https://github.com/Marfusios/kalshi-client-websocket</PackageProjectUrl>
+		<PackageIcon>icon.png</PackageIcon>
+		<RepositoryUrl>https://github.com/Marfusios/kalshi-client-websocket</RepositoryUrl>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<RepositoryType>Git</RepositoryType>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<Nullable>annotations</Nullable>
+		<LangVersion>latest</LangVersion>
+		<NoWarn>1591</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+		<PackageReference Include="System.Reactive" Version="6.1.0" />
+		<PackageReference Include="Websocket.Client" Version="5.5.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="icon.png" Pack="true" PackagePath="" />
+		<None Include="..\..\README.md" Pack="true" PackagePath="\" />
+		<None Include="..\..\kalshi-logo.png" Pack="true" PackagePath="\" />
+	</ItemGroup>
+
+</Project>

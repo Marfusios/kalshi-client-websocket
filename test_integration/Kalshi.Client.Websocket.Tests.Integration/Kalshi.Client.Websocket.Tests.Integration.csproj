@@ -21,6 +21,7 @@
 	<ItemGroup>
 		<None Include="data\kalshi_raw_sample.txt" CopyToOutputDirectory="PreserveNewest" />
 		<None Include="data\kalshi_public_replay.txt" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="data\kalshi_live_replay_20260520.txt" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
 </Project>

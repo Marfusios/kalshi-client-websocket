@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Kalshi.Client.Websocket;
 using Kalshi.Client.Websocket.Authentication;
 using Kalshi.Client.Websocket.Client;
+using Kalshi.Client.Websocket.Enums;
 using Kalshi.Client.Websocket.Files;
 using Kalshi.Client.Websocket.Requests;
 using Kalshi.Client.Websocket.Websockets;
@@ -67,20 +68,112 @@ namespace Kalshi.Client.Websocket.Sample
             using var client = new KalshiWebsocketClient(communicator);
             SubscribeToStreams(client);
 
+            var marketTickers = GetMarketTickers(marketTicker);
+            var captureFile = Environment.GetEnvironmentVariable("KALSHI_CAPTURE_FILE");
+            var captureSeconds = GetCaptureSeconds();
+            using var captureWriter = string.IsNullOrWhiteSpace(captureFile) ? null : CreateCaptureWriter(captureFile);
+            object captureLock = new object();
+            long orderbookSubscriptionId = 0;
+            using var orderbookSubscribed = new ManualResetEvent(false);
+
+            client.Streams.RawMessageStream.Subscribe(message =>
+            {
+                if (captureWriter == null)
+                {
+                    return;
+                }
+
+                lock (captureLock)
+                {
+                    captureWriter.WriteLine(message);
+                    captureWriter.WriteLine(";;");
+                    captureWriter.Flush();
+                }
+            });
+
+            client.Streams.SubscribedStream.Subscribe(x =>
+            {
+                if (x.Message?.Channel == KalshiChannel.OrderbookDelta)
+                {
+                    orderbookSubscriptionId = x.Message.Sid;
+                    orderbookSubscribed.Set();
+                }
+            });
+
             communicator.ReconnectionHappened.Subscribe(info =>
             {
                 Log.Information("Reconnection happened, type: {type}, resubscribing...", info.Type);
-                client.Send(SubscribeRequest.Orderbook(1, marketTicker, sendInitialSnapshot: true));
-                client.Send(SubscribeRequest.Ticker(2, marketTicker));
-                client.Send(SubscribeRequest.Trades(3, marketTicker));
+                SendLiveSubscriptions(client, marketTickers, captureWriter != null);
             });
 
             await communicator.Start();
-            client.Send(SubscribeRequest.Orderbook(1, marketTicker, sendInitialSnapshot: true));
-            client.Send(SubscribeRequest.Ticker(2, marketTicker));
-            client.Send(SubscribeRequest.Trades(3, marketTicker));
+            SendLiveSubscriptions(client, marketTickers, captureWriter != null);
+
+            if (captureWriter != null)
+            {
+                Log.Information("Capturing raw websocket messages to {file} for {seconds} seconds", captureFile, captureSeconds);
+                if (orderbookSubscribed.WaitOne(TimeSpan.FromSeconds(10)) && orderbookSubscriptionId > 0)
+                {
+                    client.Send(new UpdateSubscriptionRequest(100, new[] { orderbookSubscriptionId }, KalshiSubscriptionAction.GetSnapshot, new[] { marketTickers[0] }));
+                }
+
+                client.Send(new ListSubscriptionsRequest(101));
+                await Task.Delay(TimeSpan.FromSeconds(captureSeconds));
+                return;
+            }
 
             ExitEvent.WaitOne();
+        }
+
+        private static void SendLiveSubscriptions(KalshiWebsocketClient client, string[] marketTickers, bool broadCapture)
+        {
+            client.Send(SubscribeRequest.Orderbook(1, marketTickers[0], sendInitialSnapshot: true));
+
+            if (!broadCapture)
+            {
+                client.Send(new SubscribeRequest(2, new[] { KalshiChannel.Ticker }, marketTickers: marketTickers));
+                client.Send(new SubscribeRequest(3, new[] { KalshiChannel.Trade }, marketTickers: marketTickers));
+                return;
+            }
+
+            client.Send(new SubscribeRequest(2, new[] { KalshiChannel.Ticker }));
+            client.Send(new SubscribeRequest(3, new[] { KalshiChannel.Trade }));
+            client.Send(new SubscribeRequest(4, new[] { KalshiChannel.MarketLifecycleV2 }));
+            client.Send(new SubscribeRequest(5, new[] { KalshiChannel.MultivariateMarketLifecycle }));
+            client.Send(new SubscribeRequest(6, new[] { KalshiChannel.Fill }));
+            client.Send(new SubscribeRequest(7, new[] { KalshiChannel.MarketPositions }));
+            client.Send(new SubscribeRequest(8, new[] { KalshiChannel.UserOrders }));
+            client.Send(new SubscribeRequest(9, new[] { KalshiChannel.OrderGroupUpdates }));
+            client.Send(new SubscribeRequest(10, new[] { KalshiChannel.Communications }, shardFactor: 1, shardKey: 0));
+        }
+
+        private static string[] GetMarketTickers(string marketTicker)
+        {
+            var tickers = Environment.GetEnvironmentVariable("KALSHI_MARKET_TICKERS");
+            if (string.IsNullOrWhiteSpace(tickers))
+            {
+                return new[] { marketTicker };
+            }
+
+            return tickers.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+        }
+
+        private static int GetCaptureSeconds()
+        {
+            return int.TryParse(Environment.GetEnvironmentVariable("KALSHI_CAPTURE_SECONDS"), out var seconds) && seconds > 0
+                ? seconds
+                : 30;
+        }
+
+        private static StreamWriter CreateCaptureWriter(string fileName)
+        {
+            var directory = Path.GetDirectoryName(Path.GetFullPath(fileName));
+            if (!string.IsNullOrWhiteSpace(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            return new StreamWriter(fileName, append: false);
         }
 
         private static async Task RunReplay()
@@ -132,7 +225,7 @@ namespace Kalshi.Client.Websocket.Sample
             client.Streams.TradeStream.Subscribe(x =>
                 Log.Information("Trade {ticker}: {count} @ {price}",
                     x.Message.MarketTicker,
-                    x.Message.Count,
+                    x.Message.CountFp ?? x.Message.Count,
                     x.Message.YesPriceDollars ?? x.Message.YesPrice));
 
             client.Streams.ErrorStream.Subscribe(x =>

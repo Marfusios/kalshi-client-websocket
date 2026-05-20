@@ -155,6 +155,21 @@ namespace Kalshi.Client.Websocket.Enums
     }
 
     /// <summary>
+    /// Order book side.
+    /// </summary>
+    [JsonConverter(typeof(KalshiStringEnumConverter<KalshiBookSide>))]
+    public enum KalshiBookSide
+    {
+        Unknown = 0,
+
+        [EnumMember(Value = "bid")]
+        Bid,
+
+        [EnumMember(Value = "ask")]
+        Ask
+    }
+
+    /// <summary>
     /// Trade or order action.
     /// </summary>
     [JsonConverter(typeof(KalshiStringEnumConverter<KalshiAction>))]

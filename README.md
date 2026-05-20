@@ -95,6 +95,17 @@ dotnet run --project test_integration/Kalshi.Client.Websocket.Sample
 
 If the environment variables are not set, the sample replays the included public fixture.
 
+Capture raw websocket messages for replay tests:
+
+```powershell
+$env:KALSHI_API_KEY_ID = "your-key-id"
+$env:KALSHI_PRIVATE_KEY_PATH = "C:\keys\kalshi-private-key.pem"
+$env:KALSHI_MARKET_TICKER = "KXEXAMPLE-YES"
+$env:KALSHI_CAPTURE_FILE = "artifacts\captures\kalshi-live.txt"
+$env:KALSHI_CAPTURE_SECONDS = "30"
+dotnet run --project test_integration/Kalshi.Client.Websocket.Sample --configuration Release
+```
+
 More examples:
 
 - integration tests ([link](test_integration/Kalshi.Client.Websocket.Tests.Integration))

@@ -50,6 +50,20 @@ namespace Kalshi.Client.Websocket.Responses.MarketData
         [JsonProperty("no_dollars")]
         [JsonConverter(typeof(KalshiOrderbookLevelsConverter))]
         public OrderbookLevel[] NoDollars { get; set; }
+
+        [JsonProperty("yes_dollars_fp")]
+        [JsonConverter(typeof(KalshiOrderbookLevelsConverter))]
+        public OrderbookLevel[] YesDollarsFp { get; set; }
+
+        [JsonProperty("no_dollars_fp")]
+        [JsonConverter(typeof(KalshiOrderbookLevelsConverter))]
+        public OrderbookLevel[] NoDollarsFp { get; set; }
+
+        [JsonIgnore]
+        public OrderbookLevel[] EffectiveYesDollars => YesDollarsFp ?? YesDollars ?? Array.Empty<OrderbookLevel>();
+
+        [JsonIgnore]
+        public OrderbookLevel[] EffectiveNoDollars => NoDollarsFp ?? NoDollars ?? Array.Empty<OrderbookLevel>();
     }
 
     /// <summary>
@@ -72,8 +86,20 @@ namespace Kalshi.Client.Websocket.Responses.MarketData
         [JsonProperty("delta")]
         public decimal Delta { get; set; }
 
+        [JsonProperty("delta_fp")]
+        public decimal? DeltaFp { get; set; }
+
         [JsonProperty("side")]
         public KalshiSide Side { get; set; }
+
+        [JsonProperty("ts")]
+        public long? Timestamp { get; set; }
+
+        [JsonProperty("ts_ms")]
+        public long? TimestampMilliseconds { get; set; }
+
+        [JsonIgnore]
+        public decimal EffectiveDelta => DeltaFp ?? Delta;
     }
 
     /// <summary>

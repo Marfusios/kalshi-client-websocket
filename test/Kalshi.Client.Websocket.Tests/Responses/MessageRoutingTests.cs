@@ -35,6 +35,52 @@ namespace Kalshi.Client.Websocket.Tests.Responses
 
         [Fact]
         [Trait("Cat", "Base")]
+        public void HandleMessage_WhenFixedPointOrderbookSnapshotReceived_PublishesFixedPointLevels()
+        {
+            using var communicator = new KalshiFileCommunicator();
+            using var client = new KalshiWebsocketClient(communicator);
+            OrderbookSnapshotResponse received = null;
+
+            client.Streams.OrderbookSnapshotStream.Subscribe(x => received = x);
+
+            communicator.StreamFakeMessage(ResponseMessage.TextMessage(
+                "{\"type\":\"orderbook_snapshot\",\"sid\":1,\"seq\":41," +
+                "\"msg\":{\"market_ticker\":\"KXBTC15M-TEST\"," +
+                "\"yes_dollars_fp\":[[\"0.431\",\"12.00\"]]," +
+                "\"no_dollars_fp\":[[\"0.560\",\"8.00\"]]}}"));
+
+            Assert.NotNull(received);
+            Assert.Equal(0.431m, received.Message.EffectiveYesDollars[0].Price);
+            Assert.Equal(12m, received.Message.EffectiveYesDollars[0].Quantity);
+            Assert.Equal(0.560m, received.Message.EffectiveNoDollars[0].Price);
+            Assert.Equal(8m, received.Message.EffectiveNoDollars[0].Quantity);
+        }
+
+        [Fact]
+        [Trait("Cat", "Base")]
+        public void HandleMessage_WhenFixedPointOrderbookDeltaReceived_PublishesDeltaAndTimestamps()
+        {
+            using var communicator = new KalshiFileCommunicator();
+            using var client = new KalshiWebsocketClient(communicator);
+            OrderbookDeltaResponse received = null;
+
+            client.Streams.OrderbookDeltaStream.Subscribe(x => received = x);
+
+            communicator.StreamFakeMessage(ResponseMessage.TextMessage(
+                "{\"type\":\"orderbook_delta\",\"sid\":1,\"seq\":42," +
+                "\"msg\":{\"market_ticker\":\"KXBTC15M-TEST\"," +
+                "\"price_dollars\":\"0.431\",\"delta_fp\":\"-2.00\"," +
+                "\"side\":\"yes\",\"ts\":1784383200,\"ts_ms\":1784383200123}}"));
+
+            Assert.NotNull(received);
+            Assert.Equal(0.431m, received.Message.PriceDollars);
+            Assert.Equal(-2m, received.Message.EffectiveDelta);
+            Assert.Equal(1784383200L, received.Message.Timestamp);
+            Assert.Equal(1784383200123L, received.Message.TimestampMilliseconds);
+        }
+
+        [Fact]
+        [Trait("Cat", "Base")]
         public void HandleMessage_WhenTickerReceived_PublishesTickerStream()
         {
             using var communicator = new KalshiFileCommunicator();

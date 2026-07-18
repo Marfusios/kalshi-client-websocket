@@ -23,7 +23,8 @@ namespace Kalshi.Client.Websocket.Requests
             IEnumerable<string>? marketIds = null,
             bool? sendInitialSnapshot = null,
             int? shardFactor = null,
-            int? shardKey = null)
+            int? shardKey = null,
+            bool? useYesPrice = null)
         {
             KalshiValidations.ValidateInput(channels, nameof(channels));
             var channelArray = channels.Where(x => x != KalshiChannel.Unknown).ToArray();
@@ -41,15 +42,25 @@ namespace Kalshi.Client.Websocket.Requests
                 marketIds,
                 sendInitialSnapshot,
                 shardFactor,
-                shardKey);
+                shardKey,
+                useYesPrice);
         }
 
         /// <summary>
         /// Create an orderbook subscription for a single market.
         /// </summary>
-        public static SubscribeRequest Orderbook(long id, string marketTicker, bool? sendInitialSnapshot = null)
+        public static SubscribeRequest Orderbook(
+            long id,
+            string marketTicker,
+            bool? sendInitialSnapshot = null,
+            bool? useYesPrice = null)
         {
-            return new SubscribeRequest(id, new[] { KalshiChannel.OrderbookDelta }, marketTicker: marketTicker, sendInitialSnapshot: sendInitialSnapshot);
+            return new SubscribeRequest(
+                id,
+                new[] { KalshiChannel.OrderbookDelta },
+                marketTicker: marketTicker,
+                sendInitialSnapshot: sendInitialSnapshot,
+                useYesPrice: useYesPrice);
         }
 
         /// <summary>
@@ -100,7 +111,8 @@ namespace Kalshi.Client.Websocket.Requests
             IEnumerable<string>? marketIds,
             bool? sendInitialSnapshot,
             int? shardFactor,
-            int? shardKey)
+            int? shardKey,
+            bool? useYesPrice)
         {
             Channels = channels.ToArray();
             MarketTicker = string.IsNullOrWhiteSpace(marketTicker) ? null : marketTicker;
@@ -110,6 +122,7 @@ namespace Kalshi.Client.Websocket.Requests
             SendInitialSnapshot = sendInitialSnapshot;
             ShardFactor = shardFactor;
             ShardKey = shardKey;
+            UseYesPrice = useYesPrice;
         }
 
         [JsonProperty("channels")]
@@ -135,5 +148,8 @@ namespace Kalshi.Client.Websocket.Requests
 
         [JsonProperty("shard_key", NullValueHandling = NullValueHandling.Ignore)]
         public int? ShardKey { get; }
+
+        [JsonProperty("use_yes_price", NullValueHandling = NullValueHandling.Ignore)]
+        public bool? UseYesPrice { get; }
     }
 }

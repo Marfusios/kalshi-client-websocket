@@ -23,11 +23,15 @@ namespace Kalshi.Client.Websocket.Tests.Requests
         [Trait("Cat", "Base")]
         public void SubscribeRequest_WhenOrderbookSnapshotRequested_SerializesExpectedPayload()
         {
-            var request = SubscribeRequest.Orderbook(2, "KXTEST-YES", sendInitialSnapshot: true);
+            var request = SubscribeRequest.Orderbook(
+                2,
+                "KXTEST-YES",
+                sendInitialSnapshot: true,
+                useYesPrice: true);
 
             var json = KalshiJsonSerializer.Serialize(request);
 
-            Assert.Equal("{\"id\":2,\"cmd\":\"subscribe\",\"params\":{\"channels\":[\"orderbook_delta\"],\"market_ticker\":\"KXTEST-YES\",\"send_initial_snapshot\":true}}", json);
+            Assert.Equal("{\"id\":2,\"cmd\":\"subscribe\",\"params\":{\"channels\":[\"orderbook_delta\"],\"market_ticker\":\"KXTEST-YES\",\"send_initial_snapshot\":true,\"use_yes_price\":true}}", json);
         }
 
         [Fact]

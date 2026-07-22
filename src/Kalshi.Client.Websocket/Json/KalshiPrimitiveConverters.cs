@@ -50,7 +50,7 @@ namespace Kalshi.Client.Websocket.Json
     }
 
     /// <summary>
-    /// Converts Kalshi integer values that may arrive as JSON numbers or quoted numbers.
+    /// Converts Kalshi integer values that may arrive as JSON numbers, quoted numbers, or timestamps.
     /// </summary>
     internal sealed class KalshiLongConverter : JsonConverter
     {
@@ -73,13 +73,45 @@ namespace Kalshi.Client.Websocket.Json
                 return Convert.ToInt64(reader.Value, CultureInfo.InvariantCulture);
             }
 
+            if (reader.TokenType == JsonToken.Date)
+            {
+                if (reader.Value is DateTime date)
+                {
+                    return new DateTimeOffset(date.ToUniversalTime()).ToUnixTimeSeconds();
+                }
+
+                if (reader.Value is DateTimeOffset offset)
+                {
+                    return offset.ToUniversalTime().ToUnixTimeSeconds();
+                }
+            }
+
             var value = Convert.ToString(reader.Value, CultureInfo.InvariantCulture);
             if (string.IsNullOrWhiteSpace(value))
             {
                 return nullable ? null : (object)0L;
             }
 
-            return long.Parse(value, NumberStyles.Integer, CultureInfo.InvariantCulture);
+            if (long.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var integer))
+            {
+                return integer;
+            }
+
+            if (DateTimeOffset.TryParse(
+                value,
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
+                out var timestamp))
+            {
+                return timestamp.ToUnixTimeSeconds();
+            }
+
+            if (nullable)
+            {
+                return null;
+            }
+
+            throw new JsonSerializationException($"Value '{value}' is not a valid Int64 or timestamp.");
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)

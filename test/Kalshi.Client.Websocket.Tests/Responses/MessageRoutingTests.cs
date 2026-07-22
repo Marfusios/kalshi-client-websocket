@@ -70,13 +70,34 @@ namespace Kalshi.Client.Websocket.Tests.Responses
                 "{\"type\":\"orderbook_delta\",\"sid\":1,\"seq\":42," +
                 "\"msg\":{\"market_ticker\":\"KXBTC15M-TEST\"," +
                 "\"price_dollars\":\"0.431\",\"delta_fp\":\"-2.00\"," +
-                "\"side\":\"yes\",\"ts\":1784383200,\"ts_ms\":1784383200123}}"));
+                "\"side\":\"yes\",\"ts\":\"2026-07-18T14:00:00Z\",\"ts_ms\":1784383200123}}"));
 
             Assert.NotNull(received);
             Assert.Equal(0.431m, received.Message.PriceDollars);
             Assert.Equal(-2m, received.Message.EffectiveDelta);
             Assert.Equal(1784383200L, received.Message.Timestamp);
             Assert.Equal(1784383200123L, received.Message.TimestampMilliseconds);
+        }
+
+        [Fact]
+        [Trait("Cat", "Base")]
+        public void HandleMessage_WhenOptionalTimestampMalformed_UsesTimestampMilliseconds()
+        {
+            using var communicator = new KalshiFileCommunicator();
+            using var client = new KalshiWebsocketClient(communicator);
+            OrderbookDeltaResponse received = null;
+
+            client.Streams.OrderbookDeltaStream.Subscribe(x => received = x);
+
+            communicator.StreamFakeMessage(ResponseMessage.TextMessage(
+                "{\"type\":\"orderbook_delta\",\"sid\":1,\"seq\":43," +
+                "\"msg\":{\"market_ticker\":\"KXBTC15M-TEST\"," +
+                "\"price_dollars\":\"0.432\",\"delta_fp\":\"1.00\"," +
+                "\"side\":\"yes\",\"ts\":\"invalid\",\"ts_ms\":1784383201123}}"));
+
+            Assert.NotNull(received);
+            Assert.Null(received.Message.Timestamp);
+            Assert.Equal(1784383201123L, received.Message.TimestampMilliseconds);
         }
 
         [Fact]

@@ -185,6 +185,32 @@ namespace Kalshi.Client.Websocket.Tests.Responses
 
         [Fact]
         [Trait("Cat", "Base")]
+        public void HandleMessage_WhenFiveHzValueReceived_PublishesParsedValueAndSourceTime()
+        {
+            using var communicator = new KalshiFileCommunicator();
+            using var client = new KalshiWebsocketClient(communicator);
+            CfBenchmarksValueResponse received = null;
+
+            client.Streams.CfBenchmarksValue5HzStream.Subscribe(x => received = x);
+
+            // live production shape captured on 2026-09-11
+            communicator.StreamFakeMessage(ResponseMessage.TextMessage(
+                "{\"type\":\"cfbenchmarks_value_5hz\",\"sid\":1,\"seq\":2,\"msg\":{\"index_id\":\"BRTI\",\"value_usd\":\"76989.76000000\"," +
+                "\"source_ts_ms\":1789127948800,\"received_at\":1789127948832," +
+                "\"data\":\"{\\\"type\\\":\\\"value\\\",\\\"time\\\":1789127948800,\\\"id\\\":\\\"BRTI\\\",\\\"value\\\":\\\"76989.76\\\"}\"}}"));
+
+            Assert.NotNull(received);
+            Assert.Equal("BRTI", received.Message.IndexId);
+            Assert.Equal(76989.76m, received.Message.ValueUsd);
+            Assert.Equal(76989.76m, received.Message.EffectiveValue);
+            Assert.Equal(1789127948800L, received.Message.SourceTimestampMilliseconds);
+            Assert.Equal(DateTimeOffset.FromUnixTimeMilliseconds(1789127948800).UtcDateTime, received.Message.SourceTime);
+            Assert.Equal(DateTimeOffset.FromUnixTimeMilliseconds(1789127948832).UtcDateTime, received.Message.ReceivedTime);
+            Assert.Null(received.Message.Average60s);
+        }
+
+        [Fact]
+        [Trait("Cat", "Base")]
         public void HandleMessage_WhenIndexListReceived_PublishesIndexIds()
         {
             using var communicator = new KalshiFileCommunicator();

@@ -6,7 +6,7 @@
 		<Authors>Mariusz Kotas</Authors>
 		<Description>Client for Kalshi websocket API v2</Description>
 		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-		<PackageReleaseNotes>Add the CF Benchmarks index value channels (cfbenchmarks_value, cfbenchmarks_value_5hz, index lists) with index_ids subscriptions and subscribe_indices/unsubscribe_indices/indexlist actions, plus the pyth_value channel (raw payload) with underlying_tickers. 1.1.2 exposed microsecond timestamps and typed settlement fields.</PackageReleaseNotes>
+		<PackageReleaseNotes>Type the 5Hz CF Benchmarks payload (value_usd, source_ts_ms) and expose SourceTime/EffectiveValue for both index channels. 1.2.0 added the CF Benchmarks index value channels with index_ids subscriptions and the pyth_value channel.</PackageReleaseNotes>
 		<Copyright>Copyright 2026 Mariusz Kotas. All rights reserved.</Copyright>
 		<PackageTags>Kalshi websockets websocket client prediction markets orderbook ticker trades fills</PackageTags>
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>

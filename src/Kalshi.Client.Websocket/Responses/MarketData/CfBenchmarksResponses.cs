@@ -51,16 +51,16 @@ namespace Kalshi.Client.Websocket.Responses.MarketData
         public CfBenchmarksWindowedAverage Average60s15Min { get; set; }
 
         /// <summary>
-        /// Parsed index value, present on the 5Hz channel.
+        /// Parsed index value in USD, present on the 5Hz channel.
         /// </summary>
-        [JsonProperty("value")]
-        public decimal? Value { get; set; }
+        [JsonProperty("value_usd")]
+        public decimal? ValueUsd { get; set; }
 
         /// <summary>
-        /// Parsed index time (unix milliseconds), present on the 5Hz channel.
+        /// Source timestamp (unix milliseconds), present on the 5Hz channel.
         /// </summary>
-        [JsonProperty("time")]
-        public long? Time { get; set; }
+        [JsonProperty("source_ts_ms")]
+        public long? SourceTimestampMilliseconds { get; set; }
 
         [JsonExtensionData]
         public IDictionary<string, JToken> AdditionalData { get; set; }
@@ -70,6 +70,18 @@ namespace Kalshi.Client.Websocket.Responses.MarketData
         /// </summary>
         [JsonIgnore]
         public DateTime? ReceivedTime => KalshiTimestampParser.ToDateTime(null, ReceivedAt);
+
+        /// <summary>
+        /// Source time of the value: "source_ts_ms" (5Hz channel) or the raw frame time.
+        /// </summary>
+        [JsonIgnore]
+        public DateTime? SourceTime => KalshiTimestampParser.ToDateTime(null, SourceTimestampMilliseconds ?? ParseFrame()?.Time);
+
+        /// <summary>
+        /// Index value: "value_usd" (5Hz channel) or the raw frame value.
+        /// </summary>
+        [JsonIgnore]
+        public decimal? EffectiveValue => ValueUsd ?? ParseFrame()?.Value;
 
         /// <summary>
         /// Parses the raw CF Benchmarks frame carried in <see cref="Data"/>.

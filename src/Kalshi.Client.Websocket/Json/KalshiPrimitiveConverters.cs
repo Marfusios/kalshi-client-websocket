@@ -50,7 +50,8 @@ namespace Kalshi.Client.Websocket.Json
     }
 
     /// <summary>
-    /// Converts Kalshi integer values that may arrive as JSON numbers or quoted numbers.
+    /// Converts Kalshi integer values that may arrive as JSON numbers, quoted numbers,
+    /// or RFC3339 timestamps (e.g. orderbook_delta "ts"), which are converted to unix seconds.
     /// </summary>
     internal sealed class KalshiLongConverter : JsonConverter
     {
@@ -73,13 +74,47 @@ namespace Kalshi.Client.Websocket.Json
                 return Convert.ToInt64(reader.Value, CultureInfo.InvariantCulture);
             }
 
+            if (reader.TokenType == JsonToken.Date)
+            {
+                return ToUnixSeconds(reader.Value);
+            }
+
             var value = Convert.ToString(reader.Value, CultureInfo.InvariantCulture);
             if (string.IsNullOrWhiteSpace(value))
             {
                 return nullable ? null : (object)0L;
             }
 
-            return long.Parse(value, NumberStyles.Integer, CultureInfo.InvariantCulture);
+            if (long.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed))
+            {
+                return parsed;
+            }
+
+            if (DateTimeOffset.TryParse(
+                    value,
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
+                    out var timestamp))
+            {
+                return timestamp.ToUnixTimeSeconds();
+            }
+
+            throw new JsonSerializationException($"Cannot convert '{value}' to a Kalshi integer value");
+        }
+
+        private static long ToUnixSeconds(object value)
+        {
+            switch (value)
+            {
+                case DateTimeOffset offset:
+                    return offset.ToUnixTimeSeconds();
+                case DateTime date:
+                    return new DateTimeOffset(date.Kind == DateTimeKind.Unspecified
+                        ? DateTime.SpecifyKind(date, DateTimeKind.Utc)
+                        : date.ToUniversalTime()).ToUnixTimeSeconds();
+                default:
+                    throw new JsonSerializationException($"Cannot convert '{value}' to a Kalshi integer value");
+            }
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)

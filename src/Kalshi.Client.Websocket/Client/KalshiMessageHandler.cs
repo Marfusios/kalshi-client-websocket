@@ -1,5 +1,7 @@
 using System;
+using System.IO;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Kalshi.Client.Websocket.Json;
 using Kalshi.Client.Websocket.Responses;
@@ -22,8 +24,19 @@ namespace Kalshi.Client.Websocket.Client
 
         public void HandleMessage(string message)
         {
-            var token = JToken.Parse(message);
-            HandleToken(token);
+            HandleToken(ParseToken(message));
+        }
+
+        /// <summary>
+        /// Parses without automatic date detection so RFC3339 strings reach the typed converters as strings.
+        /// </summary>
+        private static JToken ParseToken(string message)
+        {
+            using (var reader = new JsonTextReader(new StringReader(message)))
+            {
+                reader.DateParseHandling = DateParseHandling.None;
+                return JToken.ReadFrom(reader);
+            }
         }
 
         private void HandleToken(JToken token)

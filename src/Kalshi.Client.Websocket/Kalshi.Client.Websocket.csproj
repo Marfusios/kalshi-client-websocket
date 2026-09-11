@@ -6,7 +6,7 @@
 		<Authors>Mariusz Kotas</Authors>
 		<Description>Client for Kalshi websocket API v2</Description>
 		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-		<PackageReleaseNotes>Support fixed-point orderbook payloads (yes_dollars_fp, no_dollars_fp, delta_fp, ts/ts_ms), the use_yes_price subscription flag, and PEM private key import via KalshiAuthentication.FromPemPrivateKey.</PackageReleaseNotes>
+		<PackageReleaseNotes>Parse RFC3339 "ts" values (sent on orderbook_delta) into unix seconds instead of failing, and stop automatic date detection so raw strings reach the typed converters. 1.1.0 added fixed-point orderbook payloads, the use_yes_price flag, and KalshiAuthentication.FromPemPrivateKey.</PackageReleaseNotes>
 		<Copyright>Copyright 2026 Mariusz Kotas. All rights reserved.</Copyright>
 		<PackageTags>Kalshi websockets websocket client prediction markets orderbook ticker trades fills</PackageTags>
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>

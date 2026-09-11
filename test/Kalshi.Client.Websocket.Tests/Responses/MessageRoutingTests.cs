@@ -81,6 +81,55 @@ namespace Kalshi.Client.Websocket.Tests.Responses
 
         [Fact]
         [Trait("Cat", "Base")]
+        public void HandleMessage_WhenOrderbookDeltaHasRfc3339Timestamp_ConvertsToUnixSeconds()
+        {
+            using var communicator = new KalshiFileCommunicator();
+            using var client = new KalshiWebsocketClient(communicator);
+            OrderbookDeltaResponse received = null;
+
+            client.Streams.OrderbookDeltaStream.Subscribe(x => received = x);
+
+            // live production shape captured on 2026-09-11
+            communicator.StreamFakeMessage(ResponseMessage.TextMessage(
+                "{\"type\":\"orderbook_delta\",\"sid\":1,\"seq\":3," +
+                "\"msg\":{\"market_ticker\":\"KXBTC15M-26SEP110545-45\",\"market_id\":\"5b93128e-380d-4862-bf4e-6ee11d9d8a25\"," +
+                "\"price_dollars\":\"0.3600\",\"delta_fp\":\"20.00\",\"side\":\"yes\"," +
+                "\"ts\":\"2026-09-11T09:31:20.25424Z\",\"ts_ms\":1789119080254}}"));
+
+            Assert.NotNull(received);
+            Assert.Equal(0.36m, received.Message.PriceDollars);
+            Assert.Equal(20m, received.Message.EffectiveDelta);
+            Assert.Equal(KalshiSide.Yes, received.Message.Side);
+            Assert.Equal(1789119080L, received.Message.Timestamp);
+            Assert.Equal(1789119080254L, received.Message.TimestampMilliseconds);
+        }
+
+        [Fact]
+        [Trait("Cat", "Base")]
+        public void HandleMessage_WhenTickerHasIsoTime_ParsesTimeAndTimestamps()
+        {
+            using var communicator = new KalshiFileCommunicator();
+            using var client = new KalshiWebsocketClient(communicator);
+            TickerResponse received = null;
+
+            client.Streams.TickerStream.Subscribe(x => received = x);
+
+            communicator.StreamFakeMessage(ResponseMessage.TextMessage(
+                "{\"type\":\"ticker\",\"sid\":3,\"msg\":{\"market_id\":\"8e4da2ec-8660-4066-956a-0437a34786ab\"," +
+                "\"market_ticker\":\"KXETH15M-26SEP110545-45\",\"price_dollars\":\"0.5100\",\"yes_bid_dollars\":\"0.5000\"," +
+                "\"yes_ask_dollars\":\"0.5100\",\"volume_fp\":\"2783.20\",\"open_interest_fp\":\"2249.46\"," +
+                "\"dollar_volume\":1391,\"dollar_open_interest\":1124,\"yes_bid_size_fp\":\"310.93\",\"yes_ask_size_fp\":\"1.20\"," +
+                "\"last_trade_size_fp\":\"10.57\",\"ts\":1789119080,\"ts_ms\":1789119080710,\"time\":\"2026-09-11T09:31:20.710855Z\"}}"));
+
+            Assert.NotNull(received);
+            Assert.Equal(0.51m, received.Message.PriceDollars);
+            Assert.Equal(1789119080L, received.Message.Timestamp);
+            Assert.Equal(1789119080710L, received.Message.TimestampMilliseconds);
+            Assert.Equal(new DateTime(2026, 9, 11, 9, 31, 20, 710, DateTimeKind.Utc).AddTicks(8550), received.Message.Time);
+        }
+
+        [Fact]
+        [Trait("Cat", "Base")]
         public void HandleMessage_WhenTickerReceived_PublishesTickerStream()
         {
             using var communicator = new KalshiFileCommunicator();

@@ -17,6 +17,9 @@ namespace Kalshi.Client.Websocket.Json
             {
                 NamingStrategy = new SnakeCaseNamingStrategy()
             },
+            // Kalshi mixes unix numbers and RFC3339 strings (e.g. orderbook_delta "ts"),
+            // keep strings as strings and let the typed converters decide.
+            DateParseHandling = DateParseHandling.None,
             Converters =
             {
                 new KalshiDecimalConverter(),

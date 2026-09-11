@@ -102,6 +102,79 @@ namespace Kalshi.Client.Websocket.Tests.Responses
             Assert.Equal(KalshiSide.Yes, received.Message.Side);
             Assert.Equal(1789119080L, received.Message.Timestamp);
             Assert.Equal(1789119080254L, received.Message.TimestampMilliseconds);
+            // Time keeps the microseconds of the RFC3339 value
+            Assert.Equal(new DateTime(2026, 9, 11, 9, 31, 20, DateTimeKind.Utc).AddTicks(2542400), received.Message.Time);
+            Assert.Null(received.Message.ClientOrderId);
+        }
+
+        [Fact]
+        [Trait("Cat", "Base")]
+        public void HandleMessage_WhenOrderbookDeltaHasUnixTimestamp_TimeFallsBackToMilliseconds()
+        {
+            using var communicator = new KalshiFileCommunicator();
+            using var client = new KalshiWebsocketClient(communicator);
+            OrderbookDeltaResponse received = null;
+
+            client.Streams.OrderbookDeltaStream.Subscribe(x => received = x);
+
+            communicator.StreamFakeMessage(ResponseMessage.TextMessage(
+                "{\"type\":\"orderbook_delta\",\"sid\":1,\"seq\":3," +
+                "\"msg\":{\"market_ticker\":\"KXBTC15M-TEST\",\"price_dollars\":\"0.3600\",\"delta_fp\":\"20.00\",\"side\":\"yes\"," +
+                "\"ts\":1789119080,\"ts_ms\":1789119080254,\"client_order_id\":\"c-1\",\"subaccount\":2}}"));
+
+            Assert.NotNull(received);
+            Assert.Equal(1789119080L, received.Message.Timestamp);
+            Assert.Equal(DateTimeOffset.FromUnixTimeMilliseconds(1789119080254).UtcDateTime, received.Message.Time);
+            Assert.Equal("c-1", received.Message.ClientOrderId);
+            Assert.Equal(2, received.Message.Subaccount);
+        }
+
+        [Fact]
+        [Trait("Cat", "Base")]
+        public void HandleMessage_WhenTradeReceived_ParsesBlockTradeFlagAndTime()
+        {
+            using var communicator = new KalshiFileCommunicator();
+            using var client = new KalshiWebsocketClient(communicator);
+            TradeResponse received = null;
+
+            client.Streams.TradeStream.Subscribe(x => received = x);
+
+            communicator.StreamFakeMessage(ResponseMessage.TextMessage(
+                "{\"type\":\"trade\",\"sid\":2,\"seq\":1,\"msg\":{\"trade_id\":\"0722b0f4\",\"market_ticker\":\"KXBTC15M-26SEP110545-45\"," +
+                "\"yes_price_dollars\":\"0.4500\",\"no_price_dollars\":\"0.5500\",\"count_fp\":\"12.50\",\"taker_side\":\"no\"," +
+                "\"taker_outcome_side\":\"no\",\"taker_book_side\":\"ask\",\"is_block_trade\":false,\"ts\":1789119080,\"ts_ms\":1789119080777}}"));
+
+            Assert.NotNull(received);
+            Assert.False(received.Message.IsBlockTrade);
+            Assert.Equal(12.5m, received.Message.CountFp);
+            Assert.Equal(KalshiSide.No, received.Message.TakerSide);
+            Assert.Equal(DateTimeOffset.FromUnixTimeMilliseconds(1789119080777).UtcDateTime, received.Message.Time);
+        }
+
+        [Fact]
+        [Trait("Cat", "Base")]
+        public void HandleMessage_WhenMarketSettled_ParsesResultAndStrike()
+        {
+            using var communicator = new KalshiFileCommunicator();
+            using var client = new KalshiWebsocketClient(communicator);
+            MarketLifecycleResponse received = null;
+
+            client.Streams.MarketLifecycleStream.Subscribe(x => received = x);
+
+            communicator.StreamFakeMessage(ResponseMessage.TextMessage(
+                "{\"type\":\"market_lifecycle_v2\",\"sid\":4,\"seq\":9,\"msg\":{\"market_ticker\":\"KXBTC15M-26SEP110545-45\"," +
+                "\"event_type\":\"settled\",\"result\":\"yes\",\"settlement_value\":\"77401.12\",\"determination_ts\":1789119905," +
+                "\"settled_ts\":1789119960,\"strike_type\":\"greater_or_equal\",\"floor_strike\":77336.05,\"open_ts\":1789119000,\"close_ts\":1789119900}}"));
+
+            Assert.NotNull(received);
+            Assert.Equal(KalshiLifecycleEvent.Settled, received.Message.EventType);
+            Assert.Equal("yes", received.Message.Result);
+            Assert.Equal("77401.12", received.Message.SettlementValue);
+            Assert.Equal(77336.05m, received.Message.FloorStrike);
+            Assert.Equal("greater_or_equal", received.Message.StrikeType);
+            Assert.Equal(1789119905L, received.Message.DeterminationTimestamp);
+            Assert.Equal(1789119960L, received.Message.SettledTimestamp);
+            Assert.Equal(1789119900L, received.Message.CloseTimestamp);
         }
 
         [Fact]

@@ -6,7 +6,7 @@
 		<Authors>Mariusz Kotas</Authors>
 		<Description>Client for Kalshi websocket API v2</Description>
 		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-		<PackageReleaseNotes>Parse RFC3339 "ts" values (sent on orderbook_delta) into unix seconds instead of failing, and stop automatic date detection so raw strings reach the typed converters. 1.1.0 added fixed-point orderbook payloads, the use_yes_price flag, and KalshiAuthentication.FromPemPrivateKey.</PackageReleaseNotes>
+		<PackageReleaseNotes>Expose microsecond precision through OrderbookDeltaMessage.Time and TradeMessage.Time, add is_block_trade, client_order_id and subaccount, and type the market lifecycle settlement fields (result, settlement_value, determination_ts, settled_ts, strikes, price_ranges). 1.1.1 parsed RFC3339 "ts" values on orderbook_delta; 1.1.0 added fixed-point orderbook payloads and KalshiAuthentication.FromPemPrivateKey.</PackageReleaseNotes>
 		<Copyright>Copyright 2026 Mariusz Kotas. All rights reserved.</Copyright>
 		<PackageTags>Kalshi websockets websocket client prediction markets orderbook ticker trades fills</PackageTags>
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>

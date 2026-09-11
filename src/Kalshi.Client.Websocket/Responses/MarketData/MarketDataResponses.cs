@@ -3,6 +3,7 @@ using System;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Kalshi.Client.Websocket.Enums;
+using Kalshi.Client.Websocket.Json;
 
 namespace Kalshi.Client.Websocket.Responses.MarketData
 {
@@ -128,6 +129,9 @@ namespace Kalshi.Client.Websocket.Responses.MarketData
         [JsonProperty("taker_book_side")]
         public KalshiBookSide TakerBookSide { get; set; }
 
+        [JsonProperty("is_block_trade")]
+        public bool? IsBlockTrade { get; set; }
+
         [JsonProperty("ts")]
         public long? Timestamp { get; set; }
 
@@ -136,6 +140,14 @@ namespace Kalshi.Client.Websocket.Responses.MarketData
 
         [JsonProperty("trade_id")]
         public string TradeId { get; set; }
+
+        /// <summary>
+        /// Most precise available trade time ("ts_ms", then unix seconds "ts").
+        /// </summary>
+        [JsonIgnore]
+        public DateTime? Time => KalshiTimestampParser.ToDateTime(
+            Timestamp?.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            TimestampMilliseconds);
     }
 
     /// <summary>
@@ -194,8 +206,47 @@ namespace Kalshi.Client.Websocket.Responses.MarketData
         [JsonProperty("price_level_structure")]
         public string PriceLevelStructure { get; set; }
 
+        [JsonProperty("price_ranges")]
+        public JArray PriceRanges { get; set; }
+
         [JsonProperty("is_deactivated")]
         public bool? IsDeactivated { get; set; }
+
+        /// <summary>
+        /// Settlement result ("yes"/"no"), present on determined/settled events.
+        /// </summary>
+        [JsonProperty("result")]
+        public string Result { get; set; }
+
+        /// <summary>
+        /// Settlement value as reported by Kalshi (kept as string, format depends on the market).
+        /// </summary>
+        [JsonProperty("settlement_value")]
+        public string SettlementValue { get; set; }
+
+        [JsonProperty("determination_ts")]
+        public long? DeterminationTimestamp { get; set; }
+
+        [JsonProperty("settled_ts")]
+        public long? SettledTimestamp { get; set; }
+
+        [JsonProperty("expected_expiration_ts")]
+        public long? ExpectedExpirationTimestamp { get; set; }
+
+        [JsonProperty("strike_type")]
+        public string StrikeType { get; set; }
+
+        [JsonProperty("floor_strike")]
+        public decimal? FloorStrike { get; set; }
+
+        [JsonProperty("cap_strike")]
+        public decimal? CapStrike { get; set; }
+
+        [JsonProperty("custom_strike")]
+        public JObject CustomStrike { get; set; }
+
+        [JsonProperty("exchange_index")]
+        public int? ExchangeIndex { get; set; }
 
         [JsonProperty("additional_metadata")]
         public JObject AdditionalMetadata { get; set; }

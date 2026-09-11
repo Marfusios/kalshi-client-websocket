@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Kalshi.Client.Websocket.Enums;
@@ -71,6 +72,10 @@ namespace Kalshi.Client.Websocket.Responses.MarketData
     /// </summary>
     public class OrderbookDeltaMessage
     {
+        // "ts" arrives as unix seconds or as an RFC3339 string with microseconds, keep the raw value
+        [JsonProperty("ts")]
+        private string _timestampRaw;
+
         [JsonProperty("market_ticker")]
         public string MarketTicker { get; set; }
 
@@ -92,11 +97,36 @@ namespace Kalshi.Client.Websocket.Responses.MarketData
         [JsonProperty("side")]
         public KalshiSide Side { get; set; }
 
-        [JsonProperty("ts")]
-        public long? Timestamp { get; set; }
+        /// <summary>
+        /// Client order id, only present for the authenticated user's own orders.
+        /// </summary>
+        [JsonProperty("client_order_id")]
+        public string ClientOrderId { get; set; }
+
+        /// <summary>
+        /// Subaccount, only present for the authenticated user's own orders.
+        /// </summary>
+        [JsonProperty("subaccount")]
+        public int? Subaccount { get; set; }
 
         [JsonProperty("ts_ms")]
         public long? TimestampMilliseconds { get; set; }
+
+        /// <summary>
+        /// Unix seconds derived from "ts" (which Kalshi sends as unix seconds or RFC3339).
+        /// </summary>
+        [JsonIgnore]
+        public long? Timestamp
+        {
+            get => KalshiTimestampParser.ToUnixSeconds(_timestampRaw);
+            set => _timestampRaw = value?.ToString(CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>
+        /// Most precise available time: RFC3339 "ts" (microseconds), then "ts_ms", then unix seconds.
+        /// </summary>
+        [JsonIgnore]
+        public DateTime? Time => KalshiTimestampParser.ToDateTime(_timestampRaw, TimestampMilliseconds);
 
         [JsonIgnore]
         public decimal EffectiveDelta => DeltaFp ?? Delta;

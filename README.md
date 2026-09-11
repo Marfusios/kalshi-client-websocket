@@ -29,9 +29,10 @@ Apache License 2.0
 - installation via NuGet ([Kalshi.Client.Websocket](https://www.nuget.org/packages/Kalshi.Client.Websocket))
 - targets `netstandard2.0`, `netstandard2.1`, `net6.0`, `net7.0`, `net8.0`, `net9.0`, `net10.0`
 - built on [Websocket.Client 5.5.0](https://www.nuget.org/packages/Websocket.Client/5.5.0)
-- RSA-PSS authentication header helper for Kalshi websocket handshakes
+- RSA-PSS authentication header helper for Kalshi websocket handshakes (from an `RSA` instance or a PEM string)
 - typed subscribe, unsubscribe, update-subscription, and list-subscriptions requests
 - typed streams for public market data and private account channels
+- fixed-point orderbook payloads (`yes_dollars_fp`, `no_dollars_fp`, `delta_fp`) exposed via `EffectiveYesDollars`, `EffectiveNoDollars`, and `EffectiveDelta`
 - decimal/integer/string-enum parsing for websocket values
 - file communicator for replay/backtesting and data collection pipelines
 - unit and integration tests, including replay data seeded from public Kalshi REST market/orderbook data
@@ -41,10 +42,14 @@ Apache License 2.0
 Connect and subscribe to public market data:
 
 ```csharp
-using var rsa = RSA.Create();
-rsa.ImportFromPem(File.ReadAllText("kalshi-private-key.pem"));
+// from a PEM file (PKCS#8 "PRIVATE KEY" or PKCS#1 "RSA PRIVATE KEY")
+var auth = KalshiAuthentication.FromPemPrivateKey("api-key-id", File.ReadAllText("kalshi-private-key.pem"));
 
-var auth = KalshiAuthentication.FromRsaPrivateKey("api-key-id", rsa);
+// or from an already imported RSA instance
+// using var rsa = RSA.Create();
+// rsa.ImportFromPem(File.ReadAllText("kalshi-private-key.pem"));
+// var auth = KalshiAuthentication.FromRsaPrivateKey("api-key-id", rsa);
+
 using var communicator = new KalshiWebsocketCommunicator(KalshiValues.TradeWebsocketApiUrl, auth);
 using var client = new KalshiWebsocketClient(communicator);
 

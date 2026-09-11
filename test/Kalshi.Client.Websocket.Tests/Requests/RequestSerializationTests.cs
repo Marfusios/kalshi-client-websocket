@@ -36,6 +36,39 @@ namespace Kalshi.Client.Websocket.Tests.Requests
 
         [Fact]
         [Trait("Cat", "Base")]
+        public void SubscribeRequest_WhenCfBenchmarksIndicesRequested_SerializesIndexIds()
+        {
+            var request = SubscribeRequest.CfBenchmarksValue(3, new[] { "BRTI", "ETHUSD_RTI" });
+
+            var json = KalshiJsonSerializer.Serialize(request);
+
+            Assert.Equal("{\"id\":3,\"cmd\":\"subscribe\",\"params\":{\"channels\":[\"cfbenchmarks_value\"],\"index_ids\":[\"BRTI\",\"ETHUSD_RTI\"]}}", json);
+        }
+
+        [Fact]
+        [Trait("Cat", "Base")]
+        public void SubscribeRequest_WhenHighFrequencyCfBenchmarksRequested_UsesFiveHzChannel()
+        {
+            var request = SubscribeRequest.CfBenchmarksValue(4, new[] { "all" }, highFrequency: true);
+
+            var json = KalshiJsonSerializer.Serialize(request);
+
+            Assert.Equal("{\"id\":4,\"cmd\":\"subscribe\",\"params\":{\"channels\":[\"cfbenchmarks_value_5hz\"],\"index_ids\":[\"all\"]}}", json);
+        }
+
+        [Fact]
+        [Trait("Cat", "Base")]
+        public void UpdateSubscriptionRequest_WhenIndicesAdded_SerializesExpectedPayload()
+        {
+            var request = new UpdateSubscriptionRequest(5, 7, KalshiSubscriptionAction.SubscribeIndices, indexIds: new[] { "SOLUSD_RTI" });
+
+            var json = KalshiJsonSerializer.Serialize(request);
+
+            Assert.Equal("{\"id\":5,\"cmd\":\"update_subscription\",\"params\":{\"sid\":7,\"action\":\"subscribe_indices\",\"index_ids\":[\"SOLUSD_RTI\"]}}", json);
+        }
+
+        [Fact]
+        [Trait("Cat", "Base")]
         public void UpdateSubscriptionRequest_WhenMarketsAdded_SerializesExpectedPayload()
         {
             var request = new UpdateSubscriptionRequest(3, 7, KalshiSubscriptionAction.AddMarkets, new[] { "KXTEST-YES" });

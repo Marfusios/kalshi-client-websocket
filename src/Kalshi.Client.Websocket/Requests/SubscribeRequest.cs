@@ -24,7 +24,9 @@ namespace Kalshi.Client.Websocket.Requests
             bool? sendInitialSnapshot = null,
             int? shardFactor = null,
             int? shardKey = null,
-            bool? useYesPrice = null)
+            bool? useYesPrice = null,
+            IEnumerable<string>? indexIds = null,
+            IEnumerable<string>? underlyingTickers = null)
         {
             KalshiValidations.ValidateInput(channels, nameof(channels));
             var channelArray = channels.Where(x => x != KalshiChannel.Unknown).ToArray();
@@ -43,7 +45,9 @@ namespace Kalshi.Client.Websocket.Requests
                 sendInitialSnapshot,
                 shardFactor,
                 shardKey,
-                useYesPrice);
+                useYesPrice,
+                indexIds,
+                underlyingTickers);
         }
 
         /// <summary>
@@ -80,6 +84,25 @@ namespace Kalshi.Client.Websocket.Requests
         }
 
         /// <summary>
+        /// Create a CF Benchmarks index value subscription (e.g. "BRTI", "ETHUSD_RTI", or "all").
+        /// </summary>
+        public static SubscribeRequest CfBenchmarksValue(long id, IEnumerable<string> indexIds, bool highFrequency = false)
+        {
+            return new SubscribeRequest(
+                id,
+                new[] { highFrequency ? KalshiChannel.CfBenchmarksValue5Hz : KalshiChannel.CfBenchmarksValue },
+                indexIds: indexIds);
+        }
+
+        /// <summary>
+        /// Create a Pyth price subscription for the given underlying tickers (or "all").
+        /// </summary>
+        public static SubscribeRequest PythValue(long id, IEnumerable<string> underlyingTickers)
+        {
+            return new SubscribeRequest(id, new[] { KalshiChannel.PythValue }, underlyingTickers: underlyingTickers);
+        }
+
+        /// <summary>
         /// Client request identifier.
         /// </summary>
         [JsonProperty("id")]
@@ -112,7 +135,9 @@ namespace Kalshi.Client.Websocket.Requests
             bool? sendInitialSnapshot,
             int? shardFactor,
             int? shardKey,
-            bool? useYesPrice)
+            bool? useYesPrice,
+            IEnumerable<string>? indexIds,
+            IEnumerable<string>? underlyingTickers)
         {
             Channels = channels.ToArray();
             MarketTicker = string.IsNullOrWhiteSpace(marketTicker) ? null : marketTicker;
@@ -123,6 +148,8 @@ namespace Kalshi.Client.Websocket.Requests
             ShardFactor = shardFactor;
             ShardKey = shardKey;
             UseYesPrice = useYesPrice;
+            IndexIds = indexIds == null ? null : KalshiValidations.ValidateArray(indexIds, nameof(indexIds));
+            UnderlyingTickers = underlyingTickers == null ? null : KalshiValidations.ValidateArray(underlyingTickers, nameof(underlyingTickers));
         }
 
         [JsonProperty("channels")]
@@ -151,5 +178,17 @@ namespace Kalshi.Client.Websocket.Requests
 
         [JsonProperty("use_yes_price", NullValueHandling = NullValueHandling.Ignore)]
         public bool? UseYesPrice { get; }
+
+        /// <summary>
+        /// CF Benchmarks index ids for the cfbenchmarks_value channels (e.g. "BRTI", "ETHUSD_RTI", or "all").
+        /// </summary>
+        [JsonProperty("index_ids", NullValueHandling = NullValueHandling.Ignore)]
+        public string[]? IndexIds { get; }
+
+        /// <summary>
+        /// Underlying tickers for the pyth_value channel (or "all").
+        /// </summary>
+        [JsonProperty("underlying_tickers", NullValueHandling = NullValueHandling.Ignore)]
+        public string[]? UnderlyingTickers { get; }
     }
 }

@@ -29,6 +29,10 @@ namespace Kalshi.Client.Websocket.Client
         internal readonly Subject<EventLifecycleResponse> EventLifecycleSubject = new Subject<EventLifecycleResponse>();
         internal readonly Subject<MultivariateMarketLifecycleResponse> MultivariateMarketLifecycleSubject = new Subject<MultivariateMarketLifecycleResponse>();
         internal readonly Subject<MultivariateLookupResponse> MultivariateLookupSubject = new Subject<MultivariateLookupResponse>();
+        internal readonly Subject<CfBenchmarksValueResponse> CfBenchmarksValueSubject = new Subject<CfBenchmarksValueResponse>();
+        internal readonly Subject<CfBenchmarksValueResponse> CfBenchmarksValue5HzSubject = new Subject<CfBenchmarksValueResponse>();
+        internal readonly Subject<CfBenchmarksIndexListResponse> CfBenchmarksIndexListSubject = new Subject<CfBenchmarksIndexListResponse>();
+        internal readonly Subject<PythValueResponse> PythValueSubject = new Subject<PythValueResponse>();
 
         internal readonly Subject<FillResponse> FillSubject = new Subject<FillResponse>();
         internal readonly Subject<MarketPositionResponse> MarketPositionSubject = new Subject<MarketPositionResponse>();
@@ -73,6 +77,26 @@ namespace Kalshi.Client.Websocket.Client
         public IObservable<MultivariateMarketLifecycleResponse> MultivariateMarketLifecycleStream => MultivariateMarketLifecycleSubject.AsObservable();
 
         public IObservable<MultivariateLookupResponse> MultivariateLookupStream => MultivariateLookupSubject.AsObservable();
+
+        /// <summary>
+        /// CF Benchmarks index values (1 per second) with trailing averages.
+        /// </summary>
+        public IObservable<CfBenchmarksValueResponse> CfBenchmarksValueStream => CfBenchmarksValueSubject.AsObservable();
+
+        /// <summary>
+        /// CF Benchmarks index values at up to 5 per second.
+        /// </summary>
+        public IObservable<CfBenchmarksValueResponse> CfBenchmarksValue5HzStream => CfBenchmarksValue5HzSubject.AsObservable();
+
+        /// <summary>
+        /// Index id lists returned by the indexlist action (both CF Benchmarks channels).
+        /// </summary>
+        public IObservable<CfBenchmarksIndexListResponse> CfBenchmarksIndexListStream => CfBenchmarksIndexListSubject.AsObservable();
+
+        /// <summary>
+        /// Pyth price updates (raw payload).
+        /// </summary>
+        public IObservable<PythValueResponse> PythValueStream => PythValueSubject.AsObservable();
 
         public IObservable<FillResponse> FillStream => FillSubject.AsObservable();
 

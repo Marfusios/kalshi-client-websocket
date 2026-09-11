@@ -13,19 +13,31 @@ namespace Kalshi.Client.Websocket.Requests
         /// <summary>
         /// Create update-subscription request.
         /// </summary>
-        public UpdateSubscriptionRequest(long id, long subscriptionId, KalshiSubscriptionAction action, IEnumerable<string>? marketTickers = null)
+        public UpdateSubscriptionRequest(
+            long id,
+            long subscriptionId,
+            KalshiSubscriptionAction action,
+            IEnumerable<string>? marketTickers = null,
+            IEnumerable<string>? indexIds = null,
+            IEnumerable<string>? underlyingTickers = null)
         {
             Id = id;
-            Params = new UpdateSubscriptionParams(subscriptionId, null, action, marketTickers);
+            Params = new UpdateSubscriptionParams(subscriptionId, null, action, marketTickers, indexIds, underlyingTickers);
         }
 
         /// <summary>
         /// Create update-subscription request using Kalshi's sids-array payload shape.
         /// </summary>
-        public UpdateSubscriptionRequest(long id, IEnumerable<long> subscriptionIds, KalshiSubscriptionAction action, IEnumerable<string>? marketTickers = null)
+        public UpdateSubscriptionRequest(
+            long id,
+            IEnumerable<long> subscriptionIds,
+            KalshiSubscriptionAction action,
+            IEnumerable<string>? marketTickers = null,
+            IEnumerable<string>? indexIds = null,
+            IEnumerable<string>? underlyingTickers = null)
         {
             Id = id;
-            Params = new UpdateSubscriptionParams(null, subscriptionIds, action, marketTickers);
+            Params = new UpdateSubscriptionParams(null, subscriptionIds, action, marketTickers, indexIds, underlyingTickers);
         }
 
         /// <summary>
@@ -52,7 +64,13 @@ namespace Kalshi.Client.Websocket.Requests
     /// </summary>
     public class UpdateSubscriptionParams
     {
-        internal UpdateSubscriptionParams(long? subscriptionId, IEnumerable<long>? subscriptionIds, KalshiSubscriptionAction action, IEnumerable<string>? marketTickers)
+        internal UpdateSubscriptionParams(
+            long? subscriptionId,
+            IEnumerable<long>? subscriptionIds,
+            KalshiSubscriptionAction action,
+            IEnumerable<string>? marketTickers,
+            IEnumerable<string>? indexIds,
+            IEnumerable<string>? underlyingTickers)
         {
             if (action == KalshiSubscriptionAction.Unknown)
             {
@@ -63,6 +81,8 @@ namespace Kalshi.Client.Websocket.Requests
             Sids = subscriptionIds == null ? null : ValidateSingleSubscriptionArray(subscriptionIds);
             Action = action;
             MarketTickers = marketTickers == null ? null : KalshiValidations.ValidateArray(marketTickers, nameof(marketTickers));
+            IndexIds = indexIds == null ? null : KalshiValidations.ValidateArray(indexIds, nameof(indexIds));
+            UnderlyingTickers = underlyingTickers == null ? null : KalshiValidations.ValidateArray(underlyingTickers, nameof(underlyingTickers));
         }
 
         [JsonProperty("sid", NullValueHandling = NullValueHandling.Ignore)]
@@ -76,6 +96,18 @@ namespace Kalshi.Client.Websocket.Requests
 
         [JsonProperty("market_tickers", NullValueHandling = NullValueHandling.Ignore)]
         public string[]? MarketTickers { get; }
+
+        /// <summary>
+        /// CF Benchmarks index ids for subscribe_indices / unsubscribe_indices.
+        /// </summary>
+        [JsonProperty("index_ids", NullValueHandling = NullValueHandling.Ignore)]
+        public string[]? IndexIds { get; }
+
+        /// <summary>
+        /// Underlying tickers for subscribe_underlyings / unsubscribe_underlyings.
+        /// </summary>
+        [JsonProperty("underlying_tickers", NullValueHandling = NullValueHandling.Ignore)]
+        public string[]? UnderlyingTickers { get; }
 
         private static long[] ValidateSingleSubscriptionArray(IEnumerable<long> subscriptionIds)
         {

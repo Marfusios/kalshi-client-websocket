@@ -153,6 +153,55 @@ namespace Kalshi.Client.Websocket.Tests.Responses
 
         [Fact]
         [Trait("Cat", "Base")]
+        public void HandleMessage_WhenCfBenchmarksValueReceived_ParsesFrameAndAverages()
+        {
+            using var communicator = new KalshiFileCommunicator();
+            using var client = new KalshiWebsocketClient(communicator);
+            CfBenchmarksValueResponse received = null;
+
+            client.Streams.CfBenchmarksValueStream.Subscribe(x => received = x);
+
+            // live production shape captured on 2026-09-11
+            communicator.StreamFakeMessage(ResponseMessage.TextMessage(
+                "{\"type\":\"cfbenchmarks_value\",\"sid\":1,\"seq\":2,\"msg\":{\"index_id\":\"BRTI\",\"received_at\":1789123105077," +
+                "\"data\":\"{\\\"type\\\":\\\"value\\\",\\\"time\\\":1789123105000,\\\"id\\\":\\\"BRTI\\\",\\\"value\\\":\\\"77002.30\\\"}\"," +
+                "\"avg_60s_data\":{\"value\":\"77002.30000000\",\"window_size\":0,\"window_start_ts_ms\":1789123045000,\"window_end_ts_exclusive\":1789123105000}," +
+                "\"last_60s_windowed_average_15min\":{\"value\":\"76990.12\",\"window_size\":60,\"window_start_ts_ms\":1789122840000,\"window_end_ts_exclusive\":1789122900000}}}"));
+
+            Assert.NotNull(received);
+            Assert.Equal("BRTI", received.Message.IndexId);
+            Assert.Equal(1789123105077L, received.Message.ReceivedAt);
+            Assert.Equal(DateTimeOffset.FromUnixTimeMilliseconds(1789123105077).UtcDateTime, received.Message.ReceivedTime);
+            Assert.Equal(77002.30m, received.Message.Average60s.Value);
+            Assert.Equal(0, received.Message.Average60s.WindowSize);
+            Assert.Equal(76990.12m, received.Message.Average60s15Min.Value);
+            Assert.Equal(60, received.Message.Average60s15Min.WindowSize);
+
+            var frame = received.Message.ParseFrame();
+            Assert.Equal("BRTI", frame.Id);
+            Assert.Equal(77002.30m, frame.Value);
+            Assert.Equal(DateTimeOffset.FromUnixTimeMilliseconds(1789123105000).UtcDateTime, frame.SourceTime);
+        }
+
+        [Fact]
+        [Trait("Cat", "Base")]
+        public void HandleMessage_WhenIndexListReceived_PublishesIndexIds()
+        {
+            using var communicator = new KalshiFileCommunicator();
+            using var client = new KalshiWebsocketClient(communicator);
+            CfBenchmarksIndexListResponse received = null;
+
+            client.Streams.CfBenchmarksIndexListStream.Subscribe(x => received = x);
+
+            communicator.StreamFakeMessage(ResponseMessage.TextMessage(
+                "{\"type\":\"cfbenchmarks_value_5hz_indexlist\",\"id\":9,\"sid\":1,\"msg\":{\"index_ids\":[\"BRTI\",\"ETHUSD_RTI\"]}}"));
+
+            Assert.NotNull(received);
+            Assert.Equal(new[] { "BRTI", "ETHUSD_RTI" }, received.Message.IndexIds);
+        }
+
+        [Fact]
+        [Trait("Cat", "Base")]
         public void HandleMessage_WhenMarketSettled_ParsesResultAndStrike()
         {
             using var communicator = new KalshiFileCommunicator();

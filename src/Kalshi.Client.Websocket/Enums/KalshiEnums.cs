@@ -64,7 +64,25 @@ namespace Kalshi.Client.Websocket.Enums
         OrderGroupUpdates,
 
         [EnumMember(Value = "user_orders")]
-        UserOrders
+        UserOrders,
+
+        /// <summary>
+        /// CF Benchmarks index values (1 update per second) with trailing averages, subscribe with index_ids.
+        /// </summary>
+        [EnumMember(Value = "cfbenchmarks_value")]
+        CfBenchmarksValue,
+
+        /// <summary>
+        /// CF Benchmarks index values at up to 5 updates per second, subscribe with index_ids.
+        /// </summary>
+        [EnumMember(Value = "cfbenchmarks_value_5hz")]
+        CfBenchmarksValue5Hz,
+
+        /// <summary>
+        /// Pyth price updates, subscribe with underlying_tickers.
+        /// </summary>
+        [EnumMember(Value = "pyth_value")]
+        PythValue
     }
 
     /// <summary>
@@ -136,7 +154,22 @@ namespace Kalshi.Client.Websocket.Enums
         OrderGroupUpdates,
 
         [EnumMember(Value = "user_order")]
-        UserOrder
+        UserOrder,
+
+        [EnumMember(Value = "cfbenchmarks_value")]
+        CfBenchmarksValue,
+
+        [EnumMember(Value = "cfbenchmarks_value_indexlist")]
+        CfBenchmarksValueIndexList,
+
+        [EnumMember(Value = "cfbenchmarks_value_5hz")]
+        CfBenchmarksValue5Hz,
+
+        [EnumMember(Value = "cfbenchmarks_value_5hz_indexlist")]
+        CfBenchmarksValue5HzIndexList,
+
+        [EnumMember(Value = "pyth_value")]
+        PythValue
     }
 
     /// <summary>
@@ -199,7 +232,43 @@ namespace Kalshi.Client.Websocket.Enums
         DeleteMarkets,
 
         [EnumMember(Value = "get_snapshot")]
-        GetSnapshot
+        GetSnapshot,
+
+        /// <summary>
+        /// Add CF Benchmarks index ids to a cfbenchmarks_value(_5hz) subscription.
+        /// </summary>
+        [EnumMember(Value = "subscribe_indices")]
+        SubscribeIndices,
+
+        /// <summary>
+        /// Remove CF Benchmarks index ids from a cfbenchmarks_value(_5hz) subscription.
+        /// </summary>
+        [EnumMember(Value = "unsubscribe_indices")]
+        UnsubscribeIndices,
+
+        /// <summary>
+        /// List the CF Benchmarks index ids available on the channel (cfbenchmarks_value(_5hz)_indexlist response).
+        /// </summary>
+        [EnumMember(Value = "indexlist")]
+        IndexList,
+
+        /// <summary>
+        /// Add underlying tickers to a pyth_value subscription.
+        /// </summary>
+        [EnumMember(Value = "subscribe_underlyings")]
+        SubscribeUnderlyings,
+
+        /// <summary>
+        /// Remove underlying tickers from a pyth_value subscription.
+        /// </summary>
+        [EnumMember(Value = "unsubscribe_underlyings")]
+        UnsubscribeUnderlyings,
+
+        /// <summary>
+        /// List the underlying tickers streamed on the pyth_value channel.
+        /// </summary>
+        [EnumMember(Value = "underlying_list")]
+        UnderlyingList
     }
 
     /// <summary>

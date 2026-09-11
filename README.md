@@ -89,6 +89,20 @@ client.Send(new ListSubscriptionsRequest(6));
 client.Send(new UnsubscribeRequest(7, new[] { 2L, 3L }));
 ```
 
+CF Benchmarks reference prices (the indices Kalshi settles its crypto markets on):
+
+```csharp
+client.Streams.CfBenchmarksValueStream.Subscribe(update =>
+{
+    var frame = update.Message.ParseFrame();
+    Console.WriteLine($"{update.Message.IndexId}: {frame?.Value} at {frame?.SourceTime:O}, 60s avg {update.Message.Average60s?.Value}");
+});
+
+client.Send(SubscribeRequest.CfBenchmarksValue(8, new[] { "BRTI", "ETHUSD_RTI" }));           // 1 update per second
+client.Send(SubscribeRequest.CfBenchmarksValue(9, new[] { "BRTI" }, highFrequency: true));    // up to 5 updates per second
+client.Send(new UpdateSubscriptionRequest(10, subscriptionId: 8, KalshiSubscriptionAction.SubscribeIndices, indexIds: new[] { "SOLUSD_RTI" }));
+```
+
 Run the sample:
 
 ```powershell
@@ -139,6 +153,9 @@ More examples:
 | `event_lifecycle` | yes |
 | `multivariate_market_lifecycle` | yes |
 | `multivariate_lookup` | yes |
+| `cfbenchmarks_value` / `cfbenchmarks_value_indexlist` | yes |
+| `cfbenchmarks_value_5hz` / `cfbenchmarks_value_5hz_indexlist` | yes |
+| `pyth_value` | raw payload |
 
 #### Private/account data
 

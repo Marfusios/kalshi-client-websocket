@@ -6,7 +6,7 @@
 		<Authors>Mariusz Kotas</Authors>
 		<Description>Client for Kalshi websocket API v2</Description>
 		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-		<PackageReleaseNotes>Expose microsecond precision through OrderbookDeltaMessage.Time and TradeMessage.Time, add is_block_trade, client_order_id and subaccount, and type the market lifecycle settlement fields (result, settlement_value, determination_ts, settled_ts, strikes, price_ranges). 1.1.1 parsed RFC3339 "ts" values on orderbook_delta; 1.1.0 added fixed-point orderbook payloads and KalshiAuthentication.FromPemPrivateKey.</PackageReleaseNotes>
+		<PackageReleaseNotes>Add the CF Benchmarks index value channels (cfbenchmarks_value, cfbenchmarks_value_5hz, index lists) with index_ids subscriptions and subscribe_indices/unsubscribe_indices/indexlist actions, plus the pyth_value channel (raw payload) with underlying_tickers. 1.1.2 exposed microsecond timestamps and typed settlement fields.</PackageReleaseNotes>
 		<Copyright>Copyright 2026 Mariusz Kotas. All rights reserved.</Copyright>
 		<PackageTags>Kalshi websockets websocket client prediction markets orderbook ticker trades fills</PackageTags>
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>

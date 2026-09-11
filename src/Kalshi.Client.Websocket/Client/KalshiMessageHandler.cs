@@ -130,6 +130,19 @@ namespace Kalshi.Client.Websocket.Client
                 case "quote_executed":
                     Publish(obj, _streams.QuoteExecutedSubject);
                     break;
+                case "cfbenchmarks_value":
+                    Publish(obj, _streams.CfBenchmarksValueSubject);
+                    break;
+                case "cfbenchmarks_value_5hz":
+                    Publish(obj, _streams.CfBenchmarksValue5HzSubject);
+                    break;
+                case "cfbenchmarks_value_indexlist":
+                case "cfbenchmarks_value_5hz_indexlist":
+                    Publish(obj, _streams.CfBenchmarksIndexListSubject);
+                    break;
+                case "pyth_value":
+                    Publish(obj, _streams.PythValueSubject);
+                    break;
                 default:
                     _logger.LogDebug("Unhandled message type: {type}", type);
                     PublishUnknown(obj);
